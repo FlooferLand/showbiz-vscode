@@ -1,0 +1,86 @@
+{
+    "name": "Showbiz Bitsmap",
+    "scopeName": "source.bitsmap",
+    "fileTypes": ["bits"],
+    "patterns": [
+        {
+            "name": "keyword.control",
+            "match": "\\b(set|faz|rae|any)\\b"
+        },
+        { "include": "#comments" },
+        { "include": "#strings" },
+        { "include": "#fields" },
+        { "include": "#numbers" },
+        { "include": "#bones" },
+        { "include": "#set-statement" },
+        { "include": "#bit-statement" },
+        { "include": "#identifiers" }
+    ],
+    "repository": {
+        "comments": {
+            "name": "comment.line",
+            "begin": "#",
+            "end": "$"
+        },
+        "strings": {
+            "name": "string.quoted.double",
+            "begin": "\"",
+            "end": "\"",
+            "patterns": [
+                { "name": "constant.character.escape", "match": "\\\\." }
+            ]
+        },
+        "numbers": {
+            "patterns": [
+                {
+                    "name": "constant.numeric.float",
+                    "match": "-?\\d+\\.\\d+"
+                },
+                {
+                    "name": "constant.numeric.integer",
+                    "match": "-?\\d+"
+                }
+            ]
+        },
+        "set-statement": {
+            "name": "meta.set",
+            "begin": "\\bset\\b",
+            "end": "(?=\\n|$)",
+            "beginCaptures": {
+                "0": { "name": "keyword.control" }
+            },
+            "patterns": [
+                { "include": "#map-keywords" },
+                { "include": "#identifiers" }
+            ]
+        },
+        "bit-statement": {
+            "name": "meta.bit",
+            "begin": "\\{",
+            "end": "\\}",
+            "beginCaptures": {
+                "0": { "name": "punctuation.section" }
+            },
+            "endCaptures": {
+                "0": { "name": "punctuation.section" }
+            },
+            "patterns": [
+                { "include": "#strings" },
+                { "include": "#numbers" },
+                { "include": "#comments" },
+                {
+                    "name": "variable.language",
+                    "match": "\\b(flow|anim|rotate|x|y|z)\\b"
+                }
+            ]
+        },
+        "map-keywords": {
+            "name": "constant.language",
+            "match": "\\b(faz|rae|any)\\b"
+        },
+        "identifiers": {
+            "name": "variable.other",
+            "match": "[a-zA-Z_][a-zA-Z0-9_]*"
+        }
+    }
+}

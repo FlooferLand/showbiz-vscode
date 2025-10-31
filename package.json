@@ -1,0 +1,67 @@
+{
+    "name": "showbiz",
+    "displayName": "Showbiz",
+    "description": "Adds some utilities for working with the Showbiz Minecraft mod",
+    "version": "1.0.0",
+    "engines": {
+        "vscode": "^1.105.0"
+    },
+    "icon": "./icon.webp",
+    "publisher": "FlooferLand",
+    "repository": {
+        "type": "github",
+        "url": "https://github.com/FlooferLand/showbiz-vscode"
+    },
+    "categories": [
+        "Programming Languages",
+        "Linters"
+    ],
+    "activationEvents": [],
+    "main": "./out/extension.js",
+    "files": [
+        "data/**"
+    ],
+    "contributes": {
+        "commands": [],
+        "languages": [
+            {
+                "id": "bitsmap",
+                "aliases": [
+                    "Bitsmap"
+                ],
+                "extensions": [
+                    ".bits"
+                ],
+                "configuration": "./language-configuration.json"
+            }
+        ],
+        "grammars": [
+            {
+                "language": "bitsmap",
+                "scopeName": "source.bitsmap",
+                "path": "./syntaxes/bitsmap.tmLanguage.json"
+            }
+        ]
+    },
+    "scripts": {
+        "vscode:prepublish": "npm run compile",
+        "compile": "tsc -p ./",
+        "postcompile": "cpx \"data/**/*\" out/data",
+        "watch": "tsc -watch -p ./",
+        "pretest": "npm run compile && npm run lint",
+        "lint": "eslint src",
+        "test": "vscode-test"
+    },
+    "devDependencies": {
+        "@types/mocha": "^10.0.10",
+        "@types/node": "22.x",
+        "@types/vscode": "^1.105.0",
+        "@typescript-eslint/eslint-plugin": "^8.45.0",
+        "@typescript-eslint/parser": "^8.45.0",
+        "@vscode/test-cli": "^0.0.11",
+        "@vscode/test-electron": "^2.5.2",
+        "cpx": "^1.5.0",
+        "eslint": "^9.36.0",
+        "typescript": "^5.9.3"
+    }
+}
