@@ -18,9 +18,6 @@
     ],
     "activationEvents": [],
     "main": "./out/extension.js",
-    "files": [
-        "data/**"
-    ],
     "contributes": {
         "commands": [],
         "languages": [
