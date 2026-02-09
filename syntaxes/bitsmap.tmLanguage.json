@@ -70,7 +70,11 @@
                 { "include": "#comments" },
                 {
                     "name": "variable.language",
-                    "match": "\\b(flow|anim|rotate|x|y|z)\\b"
+                    "match": "\\b(flow|anim|rotate|move)\\b"
+                }
+                {
+                    "name": "variable.language",
+                    "match": "\\b(x|y|z|linear|ease-in)\\b"
                 }
             ]
         },
