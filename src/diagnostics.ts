@@ -44,7 +44,15 @@ export const onDocumentUpdated = (document: vscode.TextDocument, diagCollection:
             if (mapKey != "any") {
                 const fixture = sets[mapKey]
                 if (fixture == null) return
-                if (!(bitName in mappedFixtures[mapKey][fixture])) {
+                const bits = mappedFixtures[mapKey][fixture]
+                if (bitName in bits) {
+                    const diag = new vscode.Diagnostic(
+                        docLine.range,
+                        `Named bits are fragile and might change.\nConsider using numerical bit IDs instead!\nEx: \`${bitName}\` turns into \`${bits[bitName]}\``,
+                        vscode.DiagnosticSeverity.Hint
+                    )
+                    collected.push(diag)
+                } else {
                     if (globalBitRegex.test(bitName)) return
                     if (drawerBitRegex.test(bitName)) {
                         // TODO: Test if drawered bits are correct
@@ -77,9 +85,5 @@ export const onDocumentUpdated = (document: vscode.TextDocument, diagCollection:
         })
     }
     
-    if (collected.length != 0) {
-        diagCollection.set(document.uri, collected)
-    } else {
-        diagCollection.clear()
-    }
+    diagCollection.set(document.uri, collected)
 }

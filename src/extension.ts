@@ -23,16 +23,16 @@ export async function activate(context: vscode.ExtensionContext) {
     
     // Diagnostics
     const diagCollection = vscode.languages.createDiagnosticCollection("bitsmap")
-    vscode.workspace.onDidOpenTextDocument(document => {
+    const updateDiagnostics = (document: vscode.TextDocument) => {
+        if (document.languageId !== "bitsmap") return
         diagnostics.onDocumentUpdated(document, diagCollection, mappedFixtures)
-    })
-    vscode.workspace.onDidSaveTextDocument(document => {
-        diagnostics.onDocumentUpdated(document, diagCollection, mappedFixtures)
-    })
-    vscode.workspace.onDidChangeTextDocument(event => {
-        const document = event.document
-        diagnostics.onDocumentUpdated(document, diagCollection, mappedFixtures)
-    })
+    }
+    vscode.workspace.textDocuments.forEach(updateDiagnostics)
+    context.subscriptions.push(
+        vscode.workspace.onDidOpenTextDocument(updateDiagnostics),
+        vscode.workspace.onDidSaveTextDocument(updateDiagnostics),
+        vscode.workspace.onDidChangeTextDocument(event => updateDiagnostics(event.document))
+    )
 
     // Providing completion for a bunch of things
     vscode.languages.registerCompletionItemProvider(
