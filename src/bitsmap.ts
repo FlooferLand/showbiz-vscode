@@ -115,8 +115,16 @@ export function hover(mappedFixtures: MappedFixtures, document: vscode.TextDocum
     // Making sure it's on a bit statement
     if (mappings.includes(prevWord)) {
         const mapping = prevWord
-        const fixture = sets[mapping]
-        if (fixture != null) return new vscode.Hover(`\`${fixture}\``)
+        const fixtureName = sets[mapping]
+        
+        // Named bit
+        if (fixtureName != null && mappedFixtures[mapping] != undefined) {
+            const fixture = mappedFixtures[mapping][fixtureName]
+            if (fixture != undefined) {
+                const bitNum = fixture[word]
+                if (bitNum != undefined) return new vscode.Hover(`\`${fixtureName}.${bitNum}\``)
+            }
+        }
 
         // TODO: Should probably bake this and reference it from extension.ts
         let bitNumToName: Record<string, string> = {}
@@ -149,7 +157,7 @@ export function hover(mappedFixtures: MappedFixtures, document: vscode.TextDocum
         }
 
         // uhh
-        return new vscode.Hover("??")
+        return new vscode.Hover(`Bit with number or name '${word}' doesn't exist`)
     } else if (prevWord == "any") {
         let markdown = "Matching:\n"
         mappings.forEach(mapping => {

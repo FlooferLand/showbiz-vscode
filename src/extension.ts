@@ -8,6 +8,7 @@ export type MappedFixtures = Record<Mapping, Fixtures>
 
 export const recommendedMappings = ["rae", "wp5", "faz", "cec"]
 
+export const globalBitRegex = /[0-9]+/
 export const drawerBitRegex = /[0-9]+(td|bd)/
 export const mapIdRegex = /[a-zA-Z]+/
 export const fixtureSetRegex = /set\s[a-zA-Z]+\s/

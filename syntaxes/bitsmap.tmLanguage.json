@@ -12,6 +12,10 @@
             "name": "keyword.control",
             "match": "\\b(set|faz|rae|wp5|any)\\b"
         },
+        {
+            "name": "constant.numeric.float",
+            "match": "(td|bd)"
+        },
         { "include": "#comments" },
         { "include": "#strings" },
         { "include": "#fields" },
@@ -83,7 +87,7 @@
                     "match": "\\b(flow|anim|rotate|move|type|hold|wigglemul)\\b"
                 },
                 {
-                    "name": "variable.language",
+                    "name": "constant.language",
                     "match": "\\b(x|y|z|linear|ease-in)\\b"
                 }
             ]
