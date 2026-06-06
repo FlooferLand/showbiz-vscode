@@ -1,69 +1,36 @@
 import * as vscode from "vscode";
-import { bitBlockFixture, Bits, fixtureSetRegex, AnyMapping, anyMappings, Mapping, mappings } from "./extension";
-import { Bit, Fixtures } from "./data";
+import { bitBlockStartBuilder, MappedFixtures, fixtureSetRegex, mapIdRegex, Mapping, drawerBitRegex } from "./extension";
+import { Bits, Fixtures } from "./data";
+import { DRAWER_BITS, getSets } from "./utils";
 
-export function getSets(
-    document: vscode.TextDocument,
-    bits: Bits,
-    errs?: {
-        onMapError: (line: vscode.TextLine, mapKey: string) => void,
-        onFixtureError: (line: vscode.TextLine, mapKey: string, fixtureKey: string) => void
-    }
-): Record<Mapping, string | null> | null {
-    const sets: Record<Mapping, string | null> = {
-        rae: null, faz: null,
-    }
-    for (let i = 0; i < document.lineCount; i++) {
-        if (i > anyMappings.length) break
-        const docLine = document.lineAt(i)
-        const line: string = docLine.text
-        if (!line.startsWith("set ")) continue
-        const split = line.split(" ")
-        if (split.length < 3) continue
-        const mapKey: string = split[1]
-        const fixtureKey: string = split[2]
-
-        if (!mappings.includes(mapKey)) {
-            errs?.onMapError(docLine, mapKey)
-            return null
-        }
-
-        if (!(fixtureKey in bits[mapKey as Mapping])) {
-            errs?.onFixtureError(docLine, mapKey, fixtureKey)
-            return null
-        }
-        sets[mapKey as Mapping] = fixtureKey
-    }
-
-    if (Object.values(sets).filter(e => e != null).length > 0) {
-        return sets
-    }
-    return null
-}
-
-export function complete(bits: Bits, document: vscode.TextDocument, position: vscode.Position): vscode.CompletionItem[] {
+export function complete(mappedFixtures: MappedFixtures, document: vscode.TextDocument, position: vscode.Position): vscode.CompletionItem[] {
     const line = document.getText(new vscode.Range(position.with(undefined, 0), position))
+    const wordRange = document.getWordRangeAtPosition(position) ?? new vscode.Range(position, position)
     const lineTrim = line.trim()
     const completed: vscode.CompletionItem[] = []
 
     // Getting whatever fixtures they mapped
-    const sets = getSets(document, bits)
+    const sets = getSets(document, mappedFixtures)
+    const mappings = Object.keys(sets)
+    const bitBlockStart = bitBlockStartBuilder(mappings)
 
     if (line.match(fixtureSetRegex)) {
         // Setting fixtures
         const split = line.split(" ")
-        const mapKey = split[1] as Mapping
-        Object.keys(bits[mapKey]).forEach(fixtureKey => {
-            completed.push({ label: fixtureKey })
+        const mapKey = split[1]
+        Object.keys(mappedFixtures[mapKey]).forEach(fixtureKey => {
+            completed.push({ label: fixtureKey, detail: `The '${fixtureKey}' fixture` })
         });
     } else if ("set".startsWith(line) || lineTrim.length == 0) {
         // Settings
-        completed.push({ label: "set" })
-    } else if (line.startsWith("set") || lineTrim.length == 0 || anyMappings.filter(e => e.startsWith(line)).length > 0 ) {
-        anyMappings.map(e => {
-            return { label: e }
-        }).forEach(e => completed.push(e))
-    } else if (line.match(bitBlockFixture)) {
+        completed.push({ label: "set", detail: "Name a fixture" })
+        mappings.forEach(mapping => completed.push({ label: mapping, detail: `Start a ${mapping} block` }))
+    } else if (line.match(bitBlockStart)) {
+        // Skipping bit name completion for {
+        if (line.endsWith(' ') && line.split(' ').length == 3) {
+            return completed
+        }
+
         // Bit names for blocks
         const statements = line.split(",")
         let currentStmt = ""
@@ -78,39 +45,123 @@ export function complete(bits: Bits, document: vscode.TextDocument, position: vs
             stmtStartIndex = blockEndIndex + 1
         }
 
-        anyMappings.forEach(anyMap => {
-            if (!currentStmt.startsWith(anyMap)) return;
-            const mapKey = anyMap as AnyMapping;
+        mappings.forEach(mapKey => {
+            if (!currentStmt.startsWith(mapKey)) return;
 
-            let mappedBits: Bit = {}
+            let mappedBits: Bits = {}
+            let fixtureBackup: Record<string, string> = {}
             if (mapKey == "any") {
-                mappings.forEach(key => {
-                    const map = key as Mapping
-                    if (sets == null || sets[map] == null) return
-                    const bit = bits[map][sets[map]]
-                    Object.keys(bit).forEach(bitId => {
-                        const bitNum = bit[bitId]
+                mappings.forEach(map => {
+                    const bitName = sets[map]
+                    if (bitName == null) return
+                    const fixtures = mappedFixtures[map]
+                    const bits = fixtures[bitName]
+                    Object.keys(bits).forEach(bitId => {
+                        const bitNum = bits[bitId]
                         mappedBits[bitId] = bitNum
                     });
                 });
-                if (sets != null) sets["any" as Mapping] = "any"
+                sets["any"] = "any"
+            } if (sets[mapKey] != null) {
+                const fixture = sets[mapKey]
+                mappedBits = mappedFixtures[mapKey][fixture]
+            } else if (mappings.length != 0) {
+                // Adding every single bit
+                // TODO: Should probably bake this and reference it from extension.ts
+                Object.entries(mappedFixtures[mapKey]).forEach(([fixture, bits]) => {
+                    Object.entries(bits).forEach(([bitName, bitNum]) => {
+                        const name = `${fixture}.${bitName}`
+                        mappedBits[name] = bitNum
+                        fixtureBackup[name] = fixture
+                    })
+                })
             } else {
-                const key = mapKey as Mapping
-                if (sets == null || sets[key] == null) return
-                mappedBits = bits[mapKey as Mapping][sets[key]]
+                // No bitchart found
+                for (let i = 0; i < DRAWER_BITS; i++) {
+                    mappedBits[i.toString()] = i
+                }
             }
             
-            Object.keys(mappedBits).forEach(bitKey => {
-                const bitNum = mappedBits[bitKey]
-                if (sets == null || sets[mapKey as Mapping] == null) return
-                if (mapKey != "any") {
-                    completed.push({ label: bitKey, detail: `Bit ID '${bitNum}' for ${sets[mapKey as Mapping] ?? "Unknown"}` })
-                } else {
-                    completed.push({ label: bitKey, detail: `Bit ID '${bitNum}' for any fixture` })
-                }
+            var entries = Object.entries(mappedBits)
+            entries.sort((a, b) => a[1] - b[1])
+            entries.forEach(([bitName, bitNum]) => {
+                const fixtureName = (mapKey == "any") ? "any fixture" : fixtureBackup[bitName] ?? sets[mapKey] ?? "an unknown fixture"
+                completed.push({
+                    label: bitName,
+                    detail: `Bit ID '${bitNum}' for ${fixtureName}`,
+                    insertText: bitNum.toString(),
+                    filterText: `${bitName} ${bitNum}`,
+                    sortText: bitNum.toString().padStart(10, '0'),
+                    range: wordRange
+                })
             });
         })
     }
 
     return completed
 }
+
+export function hover(mappedFixtures: MappedFixtures, document: vscode.TextDocument, position: vscode.Position): vscode.ProviderResult<vscode.Hover> {
+    const range = document.getWordRangeAtPosition(position) ?? new vscode.Range(position, position)
+    const prevRange = document.getWordRangeAtPosition(new vscode.Position(range.start.line, range.start.character - 1))
+    if (prevRange == undefined) return null
+
+    const word = document.getText(range)
+    const prevWord = document.getText(prevRange)
+
+    const sets = getSets(document, mappedFixtures)
+    const mappings = Object.keys(sets)
+
+    // Making sure it's on a bit statement
+    if (mappings.includes(prevWord)) {
+        const mapping = prevWord
+        const fixture = sets[mapping]
+        if (fixture != null) return new vscode.Hover(`\`${fixture}\``)
+
+        // TODO: Should probably bake this and reference it from extension.ts
+        let bitNumToName: Record<string, string> = {}
+        Object.entries(mappedFixtures[mapping]).forEach(([fixture, bits]) => {
+            Object.entries(bits).forEach(([bitName, bitNum]) => {
+                const name = `${fixture}.${bitName}`
+                bitNumToName[bitNum.toString()] = name
+            })
+        })
+
+        // Direct bit number
+        if (word in Object.keys(bitNumToName)) {
+            return new vscode.Hover(`Matching \`${bitNumToName[word]}\``)
+        }
+
+        // TD / BD bit number
+        if (word.length > 2 && drawerBitRegex.test(word)) {
+            const wordNum = parseInt(word.substring(0, word.length - 2))
+            let index = 0
+            if (word.endsWith("td")) {
+                index = wordNum
+            } else if (word.endsWith("bd")) {
+                index = wordNum + (DRAWER_BITS / 2)
+            }
+            if (index.toString() in bitNumToName) {
+                return new vscode.Hover(`Matching \`${bitNumToName[index.toString()]}\``)
+            } else {
+                return new vscode.Hover(`Matching \`${index.toString()}\``)
+            }
+        }
+
+        // uhh
+        return new vscode.Hover("??")
+    } else if (prevWord == "any") {
+        let markdown = "Matching:\n"
+        mappings.forEach(mapping => {
+            const fixture = sets[mapping]
+            if (fixture != null)
+                markdown += `- \`${mapping}.${fixture}.${word}\`\n`
+            else
+                markdown += `- \`${mapping}.${word}\`\n`
+        })
+        return new vscode.Hover(markdown)
+    }
+
+    return null
+}
+

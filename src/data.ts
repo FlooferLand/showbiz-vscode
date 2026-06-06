@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
 
-export type Bit = Record<string, number>
-export type Fixtures = Record<string, Bit>
+export type Bits = Record<string, number>
+export type Fixtures = Record<string, Bits>
 
 export const getBits = async (context: vscode.ExtensionContext, mapName: String): Promise<Fixtures> => {
     const fixtures: Fixtures = {}
@@ -19,7 +19,7 @@ export const getBits = async (context: vscode.ExtensionContext, mapName: String)
             return
         }
         
-        let fixture: Bit = {}
+        let fixture: Bits = {}
         if (fixtureKey in fixtures) {
             fixture = fixtures[fixtureKey]
         } 

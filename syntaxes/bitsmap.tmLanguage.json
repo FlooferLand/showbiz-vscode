@@ -4,8 +4,13 @@
     "fileTypes": ["bits"],
     "patterns": [
         {
+            "name": "comment.line",
+            "begin": "!",
+            "end": "$"
+        },
+        {
             "name": "keyword.control",
-            "match": "\\b(set|faz|rae|any)\\b"
+            "match": "\\b(set|faz|rae|wp5|any)\\b"
         },
         { "include": "#comments" },
         { "include": "#strings" },
@@ -42,6 +47,10 @@
                 }
             ]
         },
+        "boolean": {
+            "name": "keyword.control",
+            "match": "yes|no"
+        },
         "set-statement": {
             "name": "meta.set",
             "begin": "\\bset\\b",
@@ -67,10 +76,11 @@
             "patterns": [
                 { "include": "#strings" },
                 { "include": "#numbers" },
+                { "include": "#boolean" },
                 { "include": "#comments" },
                 {
                     "name": "variable.language",
-                    "match": "\\b(flow|anim|rotate|move)\\b"
+                    "match": "\\b(flow|anim|rotate|move|type|hold|wigglemul)\\b"
                 },
                 {
                     "name": "variable.language",
@@ -80,7 +90,7 @@
         },
         "map-keywords": {
             "name": "constant.language",
-            "match": "\\b(faz|rae|any)\\b"
+            "match": "[a-zA-Z_]*"
         },
         "identifiers": {
             "name": "variable.other",
