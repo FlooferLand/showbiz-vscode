@@ -20,12 +20,16 @@ export async function activate(context: vscode.ExtensionContext) {
         "faz": await getBits(context, "faz"),
         "rae": await getBits(context, "rae")
     }
+    const oldMappedFixtures: MappedFixtures = {
+        "faz": await getBits(context, "faz_old"),
+        "rae": await getBits(context, "rae_old")
+    }
     
     // Diagnostics
     const diagCollection = vscode.languages.createDiagnosticCollection("bitsmap")
     const updateDiagnostics = (document: vscode.TextDocument) => {
         if (document.languageId !== "bitsmap") return
-        diagnostics.onDocumentUpdated(document, diagCollection, mappedFixtures)
+        diagnostics.onDocumentUpdated(document, diagCollection, mappedFixtures, oldMappedFixtures)
     }
     vscode.workspace.textDocuments.forEach(updateDiagnostics)
     context.subscriptions.push(

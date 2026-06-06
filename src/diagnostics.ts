@@ -2,7 +2,7 @@ import * as vscode from "vscode";
 import { getSets } from "./utils";
 import { drawerBitRegex, globalBitRegex, MappedFixtures, Mapping, recommendedMappings } from "./extension";
 
-export const onDocumentUpdated = (document: vscode.TextDocument, diagCollection: vscode.DiagnosticCollection, mappedFixtures: MappedFixtures) => {
+export const onDocumentUpdated = (document: vscode.TextDocument, diagCollection: vscode.DiagnosticCollection, mappedFixtures: MappedFixtures, oldMappedFixtures: MappedFixtures) => {
     const collected: vscode.Diagnostic[] = []
     
     // Checking "set fixtures" line
@@ -40,7 +40,6 @@ export const onDocumentUpdated = (document: vscode.TextDocument, diagCollection:
             const mapKey = split[0]
             const bitName = split[1]
 
-            if (sets == null) return
             if (mapKey != "any") {
                 const fixture = sets[mapKey]
                 if (fixture == null) return
@@ -72,7 +71,7 @@ export const onDocumentUpdated = (document: vscode.TextDocument, diagCollection:
                     if (!(bitName in mappedFixtures[mapKey][fixture])) {
                         const diag = new vscode.Diagnostic(
                             docLine.range,
-                            `The bit '${bitName}' is missing for the '${fixture}' fixture (${mapKey}).\nMake sure to specify which fixtures you support via \`set\`.`
+                            `The bit '${bitName}' is missing for the '${fixture}' fixture (${mapKey}).`
                         )
                         err = diag
                         return
