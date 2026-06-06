@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
 import { bitBlockStartBuilder, MappedFixtures, fixtureSetRegex, mapIdRegex, Mapping, drawerBitRegex } from "./extension";
 import { Bits, Fixtures } from "./data";
-import { DRAWER_BITS, getSets } from "./utils";
+import { DRAWER_BITS, getBitNumsToNames, getSets, toGlobalBit } from "./utils";
 
 export function complete(mappedFixtures: MappedFixtures, document: vscode.TextDocument, position: vscode.Position): vscode.CompletionItem[] {
     const line = document.getText(new vscode.Range(position.with(undefined, 0), position))
@@ -18,7 +18,8 @@ export function complete(mappedFixtures: MappedFixtures, document: vscode.TextDo
         // Setting fixtures
         const split = line.split(" ")
         const mapKey = split[1]
-        Object.keys(mappedFixtures[mapKey]).forEach(fixtureKey => {
+        const fixtures = mappedFixtures[mapKey]
+        Object.keys(fixtures).forEach(fixtureKey => {
             completed.push({ label: fixtureKey, detail: `The '${fixtureKey}' fixture` })
         });
     } else if ("set".startsWith(line) || lineTrim.length == 0) {
@@ -127,30 +128,18 @@ export function hover(mappedFixtures: MappedFixtures, document: vscode.TextDocum
         }
 
         // TODO: Should probably bake this and reference it from extension.ts
-        let bitNumToName: Record<string, string> = {}
-        Object.entries(mappedFixtures[mapping]).forEach(([fixture, bits]) => {
-            Object.entries(bits).forEach(([bitName, bitNum]) => {
-                const name = `${fixture}.${bitName}`
-                bitNumToName[bitNum.toString()] = name
-            })
-        })
+        const bitNumsToNames = getBitNumsToNames(mappedFixtures, mapping)
 
         // Direct bit number
-        if (word in Object.keys(bitNumToName)) {
-            return new vscode.Hover(`Matching \`${bitNumToName[word]}\``)
+        if (Object.keys(bitNumsToNames).includes(word)) {
+            return new vscode.Hover(`Matching \`${bitNumsToNames[word]}\``)
         }
 
         // TD / BD bit number
         if (word.length > 2 && drawerBitRegex.test(word)) {
-            const wordNum = parseInt(word.substring(0, word.length - 2))
-            let index = 0
-            if (word.endsWith("td")) {
-                index = wordNum
-            } else if (word.endsWith("bd")) {
-                index = wordNum + (DRAWER_BITS / 2)
-            }
-            if (index.toString() in bitNumToName) {
-                return new vscode.Hover(`Matching \`${bitNumToName[index.toString()]}\``)
+            const index = toGlobalBit(word)
+            if (Object.keys(bitNumsToNames).includes(index.toString())) {
+                return new vscode.Hover(`Matching \`${bitNumsToNames[index.toString()]}\` (Global bit ${index})`)
             } else {
                 return new vscode.Hover(`Matching \`${index.toString()}\``)
             }
@@ -161,11 +150,14 @@ export function hover(mappedFixtures: MappedFixtures, document: vscode.TextDocum
     } else if (prevWord == "any") {
         let markdown = "Matching:\n"
         mappings.forEach(mapping => {
+            const bitNumsToNames = getBitNumsToNames(mappedFixtures, mapping)
             const fixture = sets[mapping]
-            if (fixture != null)
-                markdown += `- \`${mapping}.${fixture}.${word}\`\n`
+            const globalBit = toGlobalBit(word)
+            const bit = bitNumsToNames[globalBit] ?? globalBit
+            if (fixture)
+                markdown += `- \`${mapping}.${fixture}.${bit}\`\n`
             else
-                markdown += `- \`${mapping}.${word}\`\n`
+                markdown += `- \`${mapping}.${bit}\`\n`
         })
         return new vscode.Hover(markdown)
     }

@@ -27,6 +27,18 @@ export const onDocumentUpdated = (document: vscode.TextDocument, diagCollection:
             }
         }
     )
+    Object.keys(sets).forEach(map => {
+        const fixture = sets[map]
+        if (!fixture) return
+        const fixtures = mappedFixtures[map]
+        if (fixtures && !Object.keys(fixtures).includes(fixture)) {
+            const diag = new vscode.Diagnostic(
+                document.lineAt(0).range,
+                `Invalid fixture '${fixture}' (must be of: ${Object.keys(fixtures).join(", ")})`
+            )
+            collected.push(diag)
+        }
+    })
 
     // Checking block maps
     for (let i = 0; i < document.lineCount; i++) {
@@ -44,7 +56,7 @@ export const onDocumentUpdated = (document: vscode.TextDocument, diagCollection:
                 const fixture = sets[mapKey]
                 if (fixture == null) return
                 const bits = mappedFixtures[mapKey][fixture]
-                if (bitName in bits) {
+                if (bits && Object.keys(bits).includes(bitName)) {
                     const diag = new vscode.Diagnostic(
                         docLine.range,
                         `Named bits are fragile and might change.\nConsider using numerical bit IDs instead!\nEx: \`${bitName}\` turns into \`${bits[bitName]}\``,
@@ -68,7 +80,8 @@ export const onDocumentUpdated = (document: vscode.TextDocument, diagCollection:
                 let err: vscode.Diagnostic | null = null
                 Object.entries(sets).forEach(([mapKey, fixture]) => {
                     if (fixture == null) return
-                    if (!(bitName in mappedFixtures[mapKey][fixture])) {
+                    const fixtures = mappedFixtures[mapKey]
+                    if (!fixtures || !Object.keys(fixtures).includes(fixture)) {
                         const diag = new vscode.Diagnostic(
                             docLine.range,
                             `The bit '${bitName}' is missing for the '${fixture}' fixture (${mapKey}).`

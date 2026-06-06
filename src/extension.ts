@@ -10,15 +10,16 @@ export const recommendedMappings = ["rae", "wp5", "faz", "cec"]
 
 export const globalBitRegex = /[0-9]+/
 export const drawerBitRegex = /[0-9]+(td|bd)/
-export const mapIdRegex = /[a-zA-Z]+/
-export const fixtureSetRegex = /set\s[a-zA-Z]+\s/
+export const mapIdRegex = /[a-zA-Z0-9]+/
+export const fixtureSetRegex = /set\s[a-zA-Z0-9]+\s/
 export const bitBlockStartBuilder = (fixtures: string[]) =>
     new RegExp(String.raw`(any|${fixtures.join('|')})\s`)
 
 export async function activate(context: vscode.ExtensionContext) {
     const mappedFixtures: MappedFixtures = {
         "faz": await getBits(context, "faz"),
-        "rae": await getBits(context, "rae")
+        "rae": await getBits(context, "rae"),
+        "wp5": await getBits(context, "wp5")
     }
     const oldMappedFixtures: MappedFixtures = {
         "faz": await getBits(context, "faz_old"),

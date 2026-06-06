@@ -20,7 +20,7 @@ export const getBits = async (context: vscode.ExtensionContext, mapName: String)
         }
         
         let fixture: Bits = {}
-        if (fixtureKey in fixtures) {
+        if (Object.keys(fixtures).includes(fixtureKey)) {
             fixture = fixtures[fixtureKey]
         } 
         fixture[nameKey] = value
