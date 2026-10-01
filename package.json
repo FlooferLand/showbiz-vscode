@@ -2,7 +2,7 @@
     "name": "showbiz",
     "displayName": "Showbiz",
     "description": "Adds some utilities for working with the Showbiz Minecraft mod",
-    "version": "1.1.4",
+    "version": "1.2.0",
     "engines": {
         "vscode": "^1.105.0"
     },
@@ -65,11 +65,12 @@
         "@types/vscode": "^1.105.0",
         "@typescript-eslint/eslint-plugin": "^8.45.0",
         "@typescript-eslint/parser": "^8.45.0",
+        "cpx2": "^9.0.3",
         "eslint": "^9.36.0",
-        "typescript": "^5.9.3",
-        "cpx2": "^9.0.3"
+        "typescript": "^5.9.3"
     },
     "dependencies": {
+        "@vscode/vsce": "^4.0.0",
         "vscode-languageclient": "^10.1.2"
     }
 }
