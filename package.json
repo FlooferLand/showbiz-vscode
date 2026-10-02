@@ -59,7 +59,7 @@
         "postcompile": "cpx \"data/**/*\" out/data",
         "watch": "tsc -watch -p ./",
         "lint": "eslint src",
-        "publish": "vsce package && vsce publish"
+        "publish": "vsce publish"
     },
     "devDependencies": {
         "@types/node": "22.x",
