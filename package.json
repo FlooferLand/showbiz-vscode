@@ -2,11 +2,11 @@
     "name": "showbiz",
     "displayName": "Showbiz",
     "description": "Adds some utilities for working with the Showbiz Minecraft mod",
-    "version": "1.2.2",
+    "version": "1.2.3",
     "engines": {
         "vscode": "^1.105.0"
     },
-    "icon": "./icon.webp",
+    "icon": "./icon.png",
     "publisher": "FlooferLand",
     "repository": {
         "type": "github",
@@ -36,7 +36,9 @@
             {
                 "language": "bitsmap",
                 "scopes": {
-                    "property": ["variable.other.constant"]
+                    "property": [
+                        "variable.other.constant"
+                    ]
                 }
             }
         ],
@@ -71,7 +73,6 @@
         "typescript": "^5.9.3"
     },
     "dependencies": {
-        "@vscode/vsce": "^4.0.0",
         "vscode-languageclient": "^10.1.2"
     }
 }
